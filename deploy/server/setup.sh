@@ -107,13 +107,28 @@ if [ ! -f "config.template.json" ]; then
     exit 1
 fi
 
-# Parse arrays
+# Parse arrays and convert to JSON (no jq needed!)
 IFS=',' read -ra SERVER_NAMES_ARRAY <<< "$REALITY_SERVER_NAMES"
 IFS=',' read -ra SHORT_IDS_ARRAY <<< "$REALITY_SHORT_IDS"
 
-# Convert to JSON arrays
-SERVER_NAMES_JSON=$(printf '%s\n' "${SERVER_NAMES_ARRAY[@]}" | jq -R . | jq -s .)
-SHORT_IDS_JSON=$(printf '%s\n' "${SHORT_IDS_ARRAY[@]}" | jq -R . | jq -s .)
+# Convert bash array to JSON array format
+array_to_json() {
+    local arr=("$@")
+    local json="["
+    for i in "${!arr[@]}"; do
+        # Trim whitespace
+        local item=$(echo "${arr[$i]}" | xargs)
+        json+="\"$item\""
+        if [ $i -lt $((${#arr[@]} - 1)) ]; then
+            json+=","
+        fi
+    done
+    json+="]"
+    echo "$json"
+}
+
+SERVER_NAMES_JSON=$(array_to_json "${SERVER_NAMES_ARRAY[@]}")
+SHORT_IDS_JSON=$(array_to_json "${SHORT_IDS_ARRAY[@]}")
 
 # Replace placeholders in template
 sed "s|CLIENT_UUID_PLACEHOLDER|$CLIENT_UUID|g" config.template.json | \
