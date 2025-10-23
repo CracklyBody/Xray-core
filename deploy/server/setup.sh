@@ -75,8 +75,8 @@ if [ -z "$REALITY_PRIVATE_KEY" ] || [ -z "$REALITY_PUBLIC_KEY" ]; then
 
     # Generate keys using xray
     KEY_OUTPUT=$(docker run --rm ghcr.io/xtls/xray-core:latest x25519)
-    REALITY_PRIVATE_KEY=$(echo "$KEY_OUTPUT" | grep "Private key:" | awk '{print $3}')
-    REALITY_PUBLIC_KEY=$(echo "$KEY_OUTPUT" | grep "Public key:" | awk '{print $3}')
+    REALITY_PRIVATE_KEY=$(echo "$KEY_OUTPUT" | grep "PrivateKey:" | awk '{print $2}')
+    REALITY_PUBLIC_KEY=$(echo "$KEY_OUTPUT" | grep "Password:" | awk '{print $2}')
 
     echo_info "Generated Private Key: $REALITY_PRIVATE_KEY"
     echo_info "Generated Public Key: $REALITY_PUBLIC_KEY"
