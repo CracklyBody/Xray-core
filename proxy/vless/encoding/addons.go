@@ -10,6 +10,7 @@ import (
 	"github.com/xtls/xray-core/common/protocol"
 	"github.com/xtls/xray-core/common/session"
 	"github.com/xtls/xray-core/proxy"
+	"github.com/xtls/xray-core/proxy/obfuscation"
 	"github.com/xtls/xray-core/proxy/vless"
 	"google.golang.org/protobuf/proto"
 )
@@ -68,7 +69,12 @@ func EncodeBodyAddons(writer buf.Writer, request *protocol.RequestHeader, reques
 		return NewMultiLengthPacketWriter(writer)
 	}
 	if requestAddons.Flow == vless.XRV {
-		return proxy.NewVisionWriter(writer, state, isUplink, context, conn, ob)
+		visionWriter := proxy.NewVisionWriter(writer, state, isUplink, context, conn, ob)
+
+		// Wrap Vision writer with statistical obfuscation
+		// This adds HTTP/3 padding patterns, exponential timing jitter, and burst shaping
+		obfConfig := obfuscation.DefaultConfig()
+		return obfuscation.WrapWriter(visionWriter, obfConfig, context)
 	}
 	return writer
 }
