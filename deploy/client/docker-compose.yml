@@ -1,0 +1,32 @@
+services:
+  xray-client:
+    build:
+      context: ../..
+      dockerfile: deploy/client/Dockerfile
+    container_name: xray-client
+    hostname: xray-client
+    restart: unless-stopped
+    ports:
+      - "${SOCKS_PORT:-10808}:10808"  # SOCKS5 proxy
+      - "${HTTP_PORT:-10809}:10809"   # HTTP proxy
+    volumes:
+      - ./config.json:/etc/xray/config.json:ro
+      - xray-logs:/var/log/xray
+    environment:
+      - XRAY_LOCATION_ASSET=/usr/local/share/xray
+      - TZ=${TIMEZONE:-UTC}
+    networks:
+      - xray-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  xray-logs:
+    driver: local
+
+networks:
+  xray-net:
+    driver: bridge

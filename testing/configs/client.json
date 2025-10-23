@@ -1,0 +1,76 @@
+{
+  "log": {
+    "loglevel": "debug",
+    "access": "/var/log/xray/access.log",
+    "error": "/var/log/xray/error.log"
+  },
+  "inbounds": [
+    {
+      "port": 10808,
+      "listen": "0.0.0.0",
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "tag": "socks-in"
+    },
+    {
+      "port": 10809,
+      "listen": "0.0.0.0",
+      "protocol": "http",
+      "tag": "http-in"
+    }
+  ],
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "172.25.0.10",
+            "port": 443,
+            "users": [
+              {
+                "id": "b831381d-6324-4d53-ad4f-8cda48b30811",
+                "encryption": "none",
+                "flow": "xtls-rprx-vision"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "show": false,
+          "fingerprint": "chrome",
+          "serverName": "www.microsoft.com",
+          "publicKey": "Z84J2IelR9ch3k8VtlVhhs5ycBUlXZrtQLjbdsttuVU",
+          "shortId": "0123456789abcdef",
+          "spiderX": "/"
+        }
+      },
+      "tag": "proxy"
+    },
+    {
+      "protocol": "freedom",
+      "settings": {},
+      "tag": "direct"
+    }
+  ],
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": [
+          "socks-in",
+          "http-in"
+        ],
+        "outboundTag": "proxy"
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  xray-server:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: xray-obfuscation
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./config.json:/etc/xray/config.json:ro
+      - ./logs:/var/log/xray
+    environment:
+      - TZ=UTC
+      - XRAY_LOCATION_ASSET=/usr/local/share/xray
+    cap_add:
+      - NET_ADMIN
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # Xray server with REALITY + Vision + Statistical Obfuscation
+  xray-server:
+    build:
+      context: ..
+      dockerfile: testing/Dockerfile.server
+    container_name: xray-server
+    hostname: xray-server
+    networks:
+      test-network:
+        ipv4_address: 172.25.0.10
+    ports:
+      - "443:443"
+    volumes:
+      - ./configs/server.json:/etc/xray/config.json:ro
+      - ./certs:/etc/xray/certs:ro
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - XRAY_LOCATION_ASSET=/usr/local/share/xray
+    command: run -c /etc/xray/config.json
+
+  # Xray client
+  xray-client:
+    build:
+      context: ..
+      dockerfile: testing/Dockerfile.client
+    container_name: xray-client
+    hostname: xray-client
+    networks:
+      test-network:
+        ipv4_address: 172.25.0.20
+    volumes:
+      - ./configs/client.json:/etc/xray/config.json:ro
+    depends_on:
+      - xray-server
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - XRAY_LOCATION_ASSET=/usr/local/share/xray
+    command: run -c /etc/xray/config.json
+
+  # DPI Simulator - packet capture and analysis
+  dpi-simulator:
+    image: nicolaka/netshoot:latest
+    container_name: dpi-simulator
+    hostname: dpi-simulator
+    networks:
+      test-network:
+        ipv4_address: 172.25.0.30
+    volumes:
+      - ./captures:/captures
+      - ./dpi-rules:/dpi-rules:ro
+      - ./scripts:/scripts:ro
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    command: /bin/bash -c "sleep infinity"
+
+  # Test target server (simulates real website)
+  test-target:
+    image: nginx:alpine
+    container_name: test-target
+    hostname: www.example.com
+    networks:
+      test-network:
+        ipv4_address: 172.25.0.40
+    volumes:
+      - ./target-site:/usr/share/nginx/html:ro
+
+networks:
+  test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24

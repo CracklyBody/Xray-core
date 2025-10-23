@@ -1,0 +1,33 @@
+services:
+  xray:
+    build:
+      context: ../..
+      dockerfile: deploy/server/Dockerfile
+    container_name: xray-server
+    hostname: xray-server
+    restart: unless-stopped
+    ports:
+      - "${XRAY_PORT:-443}:443"
+    volumes:
+      - ./config.json:/etc/xray/config.json:ro
+      - xray-logs:/var/log/xray
+    environment:
+      - XRAY_LOCATION_ASSET=/usr/local/share/xray
+      - TZ=${TIMEZONE:-UTC}
+    networks:
+      - xray-net
+    cap_add:
+      - NET_ADMIN
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  xray-logs:
+    driver: local
+
+networks:
+  xray-net:
+    driver: bridge
